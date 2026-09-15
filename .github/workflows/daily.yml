@@ -1,0 +1,17 @@
+name: Daily Horoscope Bot
+on:
+  schedule:
+    - cron: '30 6 * * 1-5' 
+  workflow_dispatch: 
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python libraries
+        run: pip install requests beautifulsoup4
+      - name: Run Bot
+        run: python bot.py
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
