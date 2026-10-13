@@ -66,16 +66,26 @@ try:
             else:
                 message_lines.append(f"*{sign}* {emoji}:\n{text_block}\n")
 
-    # 4. Extract Author
+    # 4. Extract Author (Popravljeno)
     author_text = ""
-    author_element = soup.find(lambda tag: tag.name in ['p', 'span', 'div'] and 'Autor:' in tag.get_text(strip=True))
+    # Trazimo element sa rečju Autor: ali OBAVEZNO mora biti kraći od 100 karaktera da ne bi uhvatio ceo sajt
+    author_element = soup.find(
+        lambda tag: tag.name in ['p', 'span', 'div'] 
+        and 'Autor:' in tag.get_text(strip=True)
+        and len(tag.get_text(strip=True)) < 100
+    )
+    
     if author_element:
-        # Čisti višak razmaka i dodaje u promenljivu
-        author_text = ' '.join(author_element.get_text(strip=True).split())
+        raw_author_text = author_element.get_text(separator=" ", strip=True)
+        # Sečemo string kod reči "Objavljeno" kako bismo se rešili spojenog datuma i vremena
+        author_text = raw_author_text.split("Objavljeno")[0].strip()
+        
+        # Ponekad se i reč "Autor:" spoji sa imenom bez razmaka, ovo to rešava:
+        author_text = author_text.replace("Autor:", "Autor: ")
+        author_text = ' '.join(author_text.split())
     
     # 5. Send to Slack
     if len(message_lines) > 1:
-        # Dodavanje autora na kraj poruke (ako je pronađen)
         if author_text:
             message_lines.append(f"\n_{author_text}_")
             
