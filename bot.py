@@ -66,8 +66,19 @@ try:
             else:
                 message_lines.append(f"*{sign}* {emoji}:\n{text_block}\n")
 
-    # 4. Send to Slack
+    # 4. Extract Author
+    author_text = ""
+    author_element = soup.find(lambda tag: tag.name in ['p', 'span', 'div'] and 'Autor:' in tag.get_text(strip=True))
+    if author_element:
+        # Čisti višak razmaka i dodaje u promenljivu
+        author_text = ' '.join(author_element.get_text(strip=True).split())
+    
+    # 5. Send to Slack
     if len(message_lines) > 1:
+        # Dodavanje autora na kraj poruke (ako je pronađen)
+        if author_text:
+            message_lines.append(f"\n_{author_text}_")
+            
         requests.post(webhook_url, json={"text": "\n".join(message_lines)}, timeout=15)
         print("Successfully sent to Slack!")
     else:
