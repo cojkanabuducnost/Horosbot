@@ -66,23 +66,21 @@ try:
             else:
                 message_lines.append(f"*{sign}* {emoji}:\n{text_block}\n")
 
-    # 4. Extract Author (Popravljeno)
+    # 4. Extract Author (RegEx Fix)
     author_text = ""
-    # Trazimo element sa rečju Autor: ali OBAVEZNO mora biti kraći od 100 karaktera da ne bi uhvatio ceo sajt
     author_element = soup.find(
         lambda tag: tag.name in ['p', 'span', 'div'] 
         and 'Autor:' in tag.get_text(strip=True)
-        and len(tag.get_text(strip=True)) < 100
+        and len(tag.get_text(strip=True)) < 150
     )
     
     if author_element:
         raw_author_text = author_element.get_text(separator=" ", strip=True)
-        # Sečemo string kod reči "Objavljeno" kako bismo se rešili spojenog datuma i vremena
-        author_text = raw_author_text.split("Objavljeno")[0].strip()
         
-        # Ponekad se i reč "Autor:" spoji sa imenom bez razmaka, ovo to rešava:
-        author_text = author_text.replace("Autor:", "Autor: ")
-        author_text = ' '.join(author_text.split())
+        # Hvata reč "Autor:" i sva slova nakon toga dok ne naiđe na prvi broj (datum)
+        match = re.search(r'(Autor:\s*[A-Za-zČčĆćŽžŠšĐđ\-\s]+)', raw_author_text)
+        if match:
+            author_text = match.group(1).strip()
     
     # 5. Send to Slack
     if len(message_lines) > 1:
